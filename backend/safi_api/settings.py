@@ -120,22 +120,16 @@ def _database_from_url(database_url: str) -> dict:
 
 
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
-DB_ENGINE = os.getenv("DB_ENGINE", "django.db.backends.postgresql")
+DB_ENGINE = os.getenv("DB_ENGINE", "django.db.backends.sqlite3")
 
-if DATABASE_URL:
+if DATABASE_URL and not os.getenv("USE_SQLITE", "").strip():
     DATABASES = {"default": _database_from_url(DATABASE_URL)}
 else:
+    # Use SQLite for local development
     DATABASES = {
         "default": {
-            "ENGINE": DB_ENGINE,
-            "NAME": os.getenv("DB_NAME", "postgres"),
-            "USER": os.getenv("DB_USER", "postgres"),
-            "PASSWORD": os.getenv("DB_PASSWORD", ""),
-            "HOST": os.getenv("DB_HOST", "127.0.0.1"),
-            "PORT": os.getenv("DB_PORT", "5432"),
-            "CONN_MAX_AGE": int(os.getenv("DB_CONN_MAX_AGE", "0")),
-            "CONN_HEALTH_CHECKS": _bool_env("DB_CONN_HEALTH_CHECKS"),
-            "OPTIONS": _database_connection_options(DB_ENGINE),
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
         }
     }
 

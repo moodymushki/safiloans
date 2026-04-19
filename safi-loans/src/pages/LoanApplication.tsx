@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, ChevronLeft, ChevronRight, Upload, FileText, X, AlertCircle, Smartphone, Loader2 } from "lucide-react";
+import { CheckCircle, ChevronLeft, ChevronRight, Upload, FileText, X, AlertCircle, Smartphone, Loader2, Image as ImageIcon } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { addApplication } from "@/lib/applicationStore";
 
@@ -53,8 +53,13 @@ const LoanApplication = () => {
   const [transactionCodeInput, setTransactionCodeInput] = useState("");
   const [paymentCheckoutId, setPaymentCheckoutId] = useState("");
   const [paymentReceipt, setPaymentReceipt] = useState("");
-  const [idFile, setIdFile] = useState<File | null>(null);
-  const [dragOver, setDragOver] = useState(false);
+  
+  // ID document state - support both PDF and image uploads
+  const [idDocumentMode, setIdDocumentMode] = useState<"pdf" | "images">("pdf");
+  const [idDocument, setIdDocument] = useState<File | null>(null);
+  const [idFrontImage, setIdFrontImage] = useState<File | null>(null);
+  const [idBackImage, setIdBackImage] = useState<File | null>(null);
+  const [dragOver, setDragOver] = useState<"pdf" | "front" | "back" | null>(null);
   const { toast } = useToast();
 
   const [form, setForm] = useState({
@@ -100,7 +105,10 @@ const LoanApplication = () => {
   const canNext = () => {
     if (step === 0) return form.fullName && form.email && form.phone && form.idNumber && form.dateOfBirth && isApplicantAdult;
     if (step === 1) return form.employer && form.jobTitle && form.monthlyIncome;
-    if (step === 2) return form.loanAmount && form.loanPurpose && form.repaymentPeriod && idFile;
+    if (step === 2) {
+      const hasIdDocuments = idDocumentMode === "pdf" ? idDocument : (idFrontImage && idBackImage);
+      return form.loanAmount && form.loanPurpose && form.repaymentPeriod && hasIdDocuments;
+    }
     return true;
   };
 
@@ -123,23 +131,49 @@ const LoanApplication = () => {
     }
   };
 
-  const handleFileDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+  const handleFileDrop = useCallback((e: React.DragEvent<HTMLDivElement>, mode: "pdf" | "front" | "back") => {
     e.preventDefault();
-    setDragOver(false);
+    setDragOver(null);
     const file = e.dataTransfer.files[0];
-    if (file && file.type === "application/pdf") {
-      setIdFile(file);
+    if (!file) return;
+
+    if (mode === "pdf" && file.type === "application/pdf") {
+      setIdDocument(file);
+    } else if (mode !== "pdf" && file.type.startsWith("image/")) {
+      if (mode === "front") {
+        setIdFrontImage(file);
+      } else {
+        setIdBackImage(file);
+      }
     } else {
-      toast({ title: "Invalid file", description: "Please upload a PDF file only.", variant: "destructive" });
+      const fileTypeLabel = mode === "pdf" ? "PDF" : "Image (JPG, PNG)";
+      toast({ 
+        title: "Invalid file", 
+        description: `Please upload a ${fileTypeLabel} file only.`, 
+        variant: "destructive" 
+      });
     }
   }, [toast]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, mode: "pdf" | "front" | "back") => {
     const file = e.target.files?.[0];
-    if (file && file.type === "application/pdf") {
-      setIdFile(file);
-    } else if (file) {
-      toast({ title: "Invalid file", description: "Please upload a PDF file only.", variant: "destructive" });
+    if (!file) return;
+
+    if (mode === "pdf" && file.type === "application/pdf") {
+      setIdDocument(file);
+    } else if (mode !== "pdf" && file.type.startsWith("image/")) {
+      if (mode === "front") {
+        setIdFrontImage(file);
+      } else {
+        setIdBackImage(file);
+      }
+    } else {
+      const fileTypeLabel = mode === "pdf" ? "PDF" : "Image (JPG, PNG)";
+      toast({ 
+        title: "Invalid file", 
+        description: `Please upload a ${fileTypeLabel} file only.`, 
+        variant: "destructive" 
+      });
     }
   };
 
@@ -206,7 +240,11 @@ const LoanApplication = () => {
         paidAt: new Date().toISOString(),
         paymentCheckoutId,
         paymentReceipt,
-      }, idFile);
+      }, {
+        idDocument,
+        idFrontImage,
+        idBackImage,
+      });
 
       setSubmitted(true);
       toast({ title: "Application submitted!", description: "We'll review your application and payment details, then contact you within 24 hours." });
@@ -415,50 +453,186 @@ const LoanApplication = () => {
                   )}
 
                   {/* ID Upload */}
-                  <div className="space-y-2">
-                    <Label>Upload National ID (PDF — Front & Back) *</Label>
-                    <p className="text-xs text-muted-foreground">Please scan or photograph both the front and back of your National ID and combine them into a single PDF file.</p>
-                    <div
-                      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                      onDragLeave={() => setDragOver(false)}
-                      onDrop={handleFileDrop}
-                      className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer ${
-                        dragOver ? "border-primary bg-primary/5" : idFile ? "border-secondary bg-secondary/5" : "border-border hover:border-primary/50"
-                      }`}
-                      onClick={() => document.getElementById("id-file-input")?.click()}
-                    >
-                      <input
-                        id="id-file-input"
-                        type="file"
-                        accept=".pdf"
-                        className="hidden"
-                        onChange={handleFileSelect}
-                      />
-                      {idFile ? (
-                        <div className="flex items-center justify-center gap-3">
-                          <FileText className="h-8 w-8 text-secondary" />
-                          <div className="text-left">
-                            <p className="font-medium text-sm">{idFile.name}</p>
-                            <p className="text-xs text-muted-foreground">{(idFile.size / 1024).toFixed(1)} KB</p>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={(e) => { e.stopPropagation(); setIdFile(null); }}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <Upload className="h-10 w-10 mx-auto text-muted-foreground" />
-                          <p className="text-sm font-medium">Drag & drop your ID PDF here</p>
-                          <p className="text-xs text-muted-foreground">or click to browse • PDF only, max 10MB</p>
-                        </div>
-                      )}
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Upload National ID *</Label>
+                      <p className="text-xs text-muted-foreground">Choose upload method:</p>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant={idDocumentMode === "pdf" ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => {
+                            setIdDocumentMode("pdf");
+                            setIdDocument(null);
+                            setIdFrontImage(null);
+                            setIdBackImage(null);
+                          }}
+                          className="flex-1 gap-1.5"
+                        >
+                          <FileText className="h-4 w-4" /> PDF
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={idDocumentMode === "images" ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => {
+                            setIdDocumentMode("images");
+                            setIdDocument(null);
+                          }}
+                          className="flex-1 gap-1.5"
+                        >
+                          <ImageIcon className="h-4 w-4" /> Front & Back
+                        </Button>
+                      </div>
                     </div>
+
+                    {/* PDF Upload */}
+                    {idDocumentMode === "pdf" && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-muted-foreground">Please scan or photograph both the front and back of your National ID and combine them into a single PDF file.</p>
+                        <div
+                          onDragOver={(e) => { e.preventDefault(); setDragOver("pdf"); }}
+                          onDragLeave={() => setDragOver(null)}
+                          onDrop={(e) => handleFileDrop(e, "pdf")}
+                          className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer ${
+                            dragOver === "pdf" ? "border-primary bg-primary/5" : idDocument ? "border-secondary bg-secondary/5" : "border-border hover:border-primary/50"
+                          }`}
+                          onClick={() => document.getElementById("id-pdf-input")?.click()}
+                        >
+                          <input
+                            id="id-pdf-input"
+                            type="file"
+                            accept=".pdf"
+                            className="hidden"
+                            onChange={(e) => handleFileSelect(e, "pdf")}
+                          />
+                          {idDocument ? (
+                            <div className="flex items-center justify-center gap-3">
+                              <FileText className="h-8 w-8 text-secondary" />
+                              <div className="text-left">
+                                <p className="font-medium text-sm">{idDocument.name}</p>
+                                <p className="text-xs text-muted-foreground">{(idDocument.size / 1024).toFixed(1)} KB</p>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={(e) => { e.stopPropagation(); setIdDocument(null); }}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <Upload className="h-10 w-10 mx-auto text-muted-foreground" />
+                              <p className="text-sm font-medium">Drag & drop your ID PDF here</p>
+                              <p className="text-xs text-muted-foreground">or click to browse • PDF only, max 10MB</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Image Upload (Front & Back) */}
+                    {idDocumentMode === "images" && (
+                      <div className="space-y-4">
+                        <p className="text-xs text-muted-foreground">Upload separate images of the front and back of your ID. JPG or PNG format accepted.</p>
+                        
+                        {/* Front Image */}
+                        <div className="space-y-2">
+                          <Label className="text-sm">ID Front Side *</Label>
+                          <div
+                            onDragOver={(e) => { e.preventDefault(); setDragOver("front"); }}
+                            onDragLeave={() => setDragOver(null)}
+                            onDrop={(e) => handleFileDrop(e, "front")}
+                            className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer ${
+                              dragOver === "front" ? "border-primary bg-primary/5" : idFrontImage ? "border-secondary bg-secondary/5" : "border-border hover:border-primary/50"
+                            }`}
+                            onClick={() => document.getElementById("id-front-input")?.click()}
+                          >
+                            <input
+                              id="id-front-input"
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleFileSelect(e, "front")}
+                            />
+                            {idFrontImage ? (
+                              <div className="flex items-center justify-center gap-3">
+                                <ImageIcon className="h-8 w-8 text-secondary" />
+                                <div className="text-left">
+                                  <p className="font-medium text-sm">{idFrontImage.name}</p>
+                                  <p className="text-xs text-muted-foreground">{(idFrontImage.size / 1024).toFixed(1)} KB</p>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={(e) => { e.stopPropagation(); setIdFrontImage(null); }}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="space-y-1">
+                                <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
+                                <p className="text-xs font-medium">Drag & drop front image</p>
+                                <p className="text-xs text-muted-foreground">or click to browse • JPG or PNG</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Back Image */}
+                        <div className="space-y-2">
+                          <Label className="text-sm">ID Back Side *</Label>
+                          <div
+                            onDragOver={(e) => { e.preventDefault(); setDragOver("back"); }}
+                            onDragLeave={() => setDragOver(null)}
+                            onDrop={(e) => handleFileDrop(e, "back")}
+                            className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer ${
+                              dragOver === "back" ? "border-primary bg-primary/5" : idBackImage ? "border-secondary bg-secondary/5" : "border-border hover:border-primary/50"
+                            }`}
+                            onClick={() => document.getElementById("id-back-input")?.click()}
+                          >
+                            <input
+                              id="id-back-input"
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleFileSelect(e, "back")}
+                            />
+                            {idBackImage ? (
+                              <div className="flex items-center justify-center gap-3">
+                                <ImageIcon className="h-8 w-8 text-secondary" />
+                                <div className="text-left">
+                                  <p className="font-medium text-sm">{idBackImage.name}</p>
+                                  <p className="text-xs text-muted-foreground">{(idBackImage.size / 1024).toFixed(1)} KB</p>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={(e) => { e.stopPropagation(); setIdBackImage(null); }}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="space-y-1">
+                                <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
+                                <p className="text-xs font-medium">Drag & drop back image</p>
+                                <p className="text-xs text-muted-foreground">or click to browse • JPG or PNG</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -487,7 +661,12 @@ const LoanApplication = () => {
                       ["Repayment Period", `${form.repaymentPeriod} month(s)`],
                       ["Purpose", form.loanPurpose],
                       ["Processing Fee", `Ksh ${processingFee.toLocaleString()}`],
-                      ["ID Document", idFile?.name || "—"],
+                      ...(idDocumentMode === "pdf" 
+                        ? [["ID Document (PDF)", idDocument?.name || "—"]]
+                        : [
+                            ["ID Front Image", idFrontImage?.name || "—"],
+                            ["ID Back Image", idBackImage?.name || "—"],
+                          ]),
                     ].map(([label, value]) => (
                       <div
                         key={label}

@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import {
   Shield, Users, DollarSign, LogOut, Lock, User, Eye, EyeOff,
-  FileText, Phone, Mail, Briefcase, Calendar, MapPin, Save, ChevronDown, ChevronUp, ExternalLink
+  FileText, Phone, Mail, Briefcase, Calendar, MapPin, Save, ChevronDown, ChevronUp, ExternalLink, Loader2
 } from "lucide-react";
 import {
   adminLogin,
@@ -30,6 +30,7 @@ const AdminDashboard = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
 
   // Profile state
   const [newUsername, setNewUsername] = useState("");
@@ -87,6 +88,7 @@ const AdminDashboard = () => {
       setPassword("");
       setNewPassword("");
       setError("");
+      setLoginLoading(false);
       setApplications([]);
       setDisplayUsername("");
       setExpandedId(null);
@@ -109,10 +111,12 @@ const AdminDashboard = () => {
   }, [authenticated]);
 
   const handleLogin = async () => {
+    setLoginLoading(true);
     try {
       const result = await adminLogin(username, password);
       if (!result.authenticated) {
         setError("Invalid credentials. Access denied.");
+        setLoginLoading(false);
         return;
       }
 
@@ -125,8 +129,10 @@ const AdminDashboard = () => {
       setNewPassword("");
       setShowPassword(false);
       setError("");
+      setLoginLoading(false);
     } catch {
       setError("Login failed. Check backend connection.");
+      setLoginLoading(false);
     }
   };
 
@@ -136,6 +142,7 @@ const AdminDashboard = () => {
     setPassword("");
     setNewPassword("");
     setError("");
+    setLoginLoading(false);
     setApplications([]);
     setDisplayUsername("");
     setExpandedId(null);
@@ -219,8 +226,12 @@ const AdminDashboard = () => {
                 </div>
               </div>
               {error && <p className="text-sm text-destructive font-medium">{error}</p>}
-              <Button type="submit" className="w-full">
-                Sign In
+              <Button type="submit" className="w-full" disabled={loginLoading}>
+                {loginLoading ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing in...</>
+                ) : (
+                  "Sign In"
+                )}
               </Button>
             </form>
           </CardContent>
@@ -347,7 +358,7 @@ const AdminDashboard = () => {
                           <TableHead>Loan Amount</TableHead>
                           <TableHead>Fee Paid</TableHead>
                           <TableHead>Payment Code</TableHead>
-                          <TableHead>ID PDF</TableHead>
+                          <TableHead>ID Document</TableHead>
                           <TableHead>Date</TableHead>
                           <TableHead className="w-10"></TableHead>
                         </TableRow>
@@ -381,6 +392,44 @@ const AdminDashboard = () => {
                                     View
                                     <ExternalLink className="h-3 w-3" />
                                   </a>
+                                ) : app.idMergedImage ? (
+                                  <a
+                                    href={app.idMergedImage}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1 text-primary hover:underline"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    View
+                                    <ExternalLink className="h-3 w-3" />
+                                  </a>
+                                ) : app.idFrontImage || app.idBackImage ? (
+                                  <div className="inline-flex items-center gap-1">
+                                    {app.idFrontImage && (
+                                      <a
+                                        href={app.idFrontImage}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-primary hover:underline text-xs"
+                                        onClick={(e) => e.stopPropagation()}
+                                        title="Front"
+                                      >
+                                        F
+                                      </a>
+                                    )}
+                                    {app.idBackImage && (
+                                      <a
+                                        href={app.idBackImage}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-primary hover:underline text-xs"
+                                        onClick={(e) => e.stopPropagation()}
+                                        title="Back"
+                                      >
+                                        B
+                                      </a>
+                                    )}
+                                  </div>
                                 ) : (
                                   <span className="text-xs text-muted-foreground">N/A</span>
                                 )}
@@ -464,6 +513,47 @@ const AdminDashboard = () => {
                                             View PDF
                                             <ExternalLink className="h-3 w-3" />
                                           </a>
+                                        ) : app.idMergedImage ? (
+                                          <a
+                                            href={app.idMergedImage}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="font-medium text-primary hover:underline inline-flex items-center gap-1"
+                                          >
+                                            View ID Images
+                                            <ExternalLink className="h-3 w-3" />
+                                          </a>
+                                        ) : app.idFrontImage || app.idBackImage ? (
+                                          <div className="space-y-1 mt-1">
+                                            {app.idFrontImage && (
+                                              <div>
+                                                <span className="text-xs text-muted-foreground">Front: </span>
+                                                <a
+                                                  href={app.idFrontImage}
+                                                  target="_blank"
+                                                  rel="noreferrer"
+                                                  className="font-medium text-primary hover:underline inline-flex items-center gap-1"
+                                                >
+                                                  View
+                                                  <ExternalLink className="h-3 w-3" />
+                                                </a>
+                                              </div>
+                                            )}
+                                            {app.idBackImage && (
+                                              <div>
+                                                <span className="text-xs text-muted-foreground">Back: </span>
+                                                <a
+                                                  href={app.idBackImage}
+                                                  target="_blank"
+                                                  rel="noreferrer"
+                                                  className="font-medium text-primary hover:underline inline-flex items-center gap-1"
+                                                >
+                                                  View
+                                                  <ExternalLink className="h-3 w-3" />
+                                                </a>
+                                              </div>
+                                            )}
+                                          </div>
                                         ) : (
                                           <span className="font-medium">N/A</span>
                                         )}

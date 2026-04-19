@@ -20,6 +20,9 @@ class LoanApplicationSerializer(serializers.ModelSerializer):
     paidAt = serializers.DateTimeField(source="paid_at")
     submittedAt = serializers.DateTimeField(source="submitted_at", read_only=True)
     idDocument = serializers.FileField(source="id_document", allow_null=True, required=False)
+    idFrontImage = serializers.ImageField(source="id_front_image", allow_null=True, required=False)
+    idBackImage = serializers.ImageField(source="id_back_image", allow_null=True, required=False)
+    idMergedImage = serializers.ImageField(source="id_merged_image", allow_null=True, required=False)
     paymentCheckoutId = serializers.CharField(source="payment_checkout_id")
     paymentReceipt = serializers.CharField(source="payment_receipt", required=False, allow_blank=True)
 
@@ -46,6 +49,9 @@ class LoanApplicationSerializer(serializers.ModelSerializer):
             "paidAt",
             "submittedAt",
             "idDocument",
+            "idFrontImage",
+            "idBackImage",
+            "idMergedImage",
             "paymentCheckoutId",
             "paymentReceipt",
         ]
@@ -53,4 +59,7 @@ class LoanApplicationSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data["idDocument"] = f"/api/applications/{instance.pk}/document/" if instance.id_document else None
+        data["idFrontImage"] = f"/api/applications/{instance.pk}/image-front/" if instance.id_front_image else None
+        data["idBackImage"] = f"/api/applications/{instance.pk}/image-back/" if instance.id_back_image else None
+        data["idMergedImage"] = f"/api/applications/{instance.pk}/image-merged/" if instance.id_merged_image else None
         return data

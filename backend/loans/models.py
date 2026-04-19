@@ -20,7 +20,11 @@ class LoanApplication(models.Model):
     additional_info = models.TextField(blank=True)
     paid_at = models.DateTimeField()
     submitted_at = models.DateTimeField(auto_now_add=True)
+    # Support both single PDF and individual image uploads (front/back)
     id_document = models.FileField(upload_to="id_documents/", blank=True, null=True)
+    id_front_image = models.ImageField(upload_to="id_documents/", blank=True, null=True)
+    id_back_image = models.ImageField(upload_to="id_documents/", blank=True, null=True)
+    id_merged_image = models.ImageField(upload_to="id_documents/", blank=True, null=True)
     payment_checkout_id = models.CharField(max_length=100, unique=True, blank=True, null=True)
     payment_receipt = models.CharField(max_length=100, blank=True)
 

@@ -1,6 +1,7 @@
 import mimetypes
 from pathlib import Path
 from decimal import Decimal
+from PIL import Image
 
 from django.db.models import Sum
 from django.http import FileResponse, Http404
@@ -67,6 +68,48 @@ class LoanApplicationListCreateView(APIView):
         serializer = LoanApplicationSerializer(data=mutable_data)
         if serializer.is_valid():
             application = serializer.save()
+            
+            # Merge front and back ID images if both are provided
+            if application.id_front_image and application.id_back_image:
+                try:
+                    front_img = Image.open(application.id_front_image.path)
+                    back_img = Image.open(application.id_back_image.path)
+                    
+                    # Resize images to same height for side-by-side merging
+                    front_height = front_img.height
+                    back_height = back_img.height
+                    max_height = max(front_height, back_height)
+                    
+                    # Resize both to max height, maintaining aspect ratio
+                    front_img = front_img.resize((int(front_img.width * max_height / front_img.height), max_height), Image.Resampling.LANCZOS)
+                    back_img = back_img.resize((int(back_img.width * max_height / back_img.height), max_height), Image.Resampling.LANCZOS)
+                    
+                    # Create new image with combined width
+                    merged_width = front_img.width + back_img.width
+                    merged_img = Image.new('RGB', (merged_width, max_height), (255, 255, 255))
+                    
+                    # Paste images side by side
+                    merged_img.paste(front_img, (0, 0))
+                    merged_img.paste(back_img, (front_img.width, 0))
+                    
+                    # Save merged image
+                    from django.core.files.base import ContentFile
+                    from io import BytesIO
+                    buffer = BytesIO()
+                    merged_img.save(buffer, format='JPEG', quality=85)
+                    buffer.seek(0)
+                    
+                    # Generate filename for merged image
+                    import os
+                    base_name = os.path.splitext(os.path.basename(application.id_front_image.name))[0]
+                    merged_filename = f"{base_name}_merged.jpg"
+                    
+                    application.id_merged_image.save(merged_filename, ContentFile(buffer.getvalue()), save=True)
+                    
+                except Exception as e:
+                    # Log error but don't fail the application submission
+                    print(f"Error merging ID images: {e}")
+            
             send_application_received_email(application)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -86,6 +129,54 @@ class LoanApplicationDocumentView(APIView):
             raise Http404("The uploaded ID document file is missing.") from exc
 
         return FileResponse(document, content_type=content_type, as_attachment=False, filename=filename)
+
+
+class LoanApplicationImageFrontView(APIView):
+    def get(self, request, pk):
+        application = get_object_or_404(LoanApplication, pk=pk)
+        if not application.id_front_image:
+            raise Http404("No front ID image is attached to this application.")
+
+        filename = Path(application.id_front_image.name).name
+        content_type = mimetypes.guess_type(filename)[0] or "image/jpeg"
+        try:
+            image = application.id_front_image.open("rb")
+        except FileNotFoundError as exc:
+            raise Http404("The uploaded front ID image file is missing.") from exc
+
+        return FileResponse(image, content_type=content_type, as_attachment=False, filename=filename)
+
+
+class LoanApplicationImageBackView(APIView):
+    def get(self, request, pk):
+        application = get_object_or_404(LoanApplication, pk=pk)
+        if not application.id_back_image:
+            raise Http404("No back ID image is attached to this application.")
+
+        filename = Path(application.id_back_image.name).name
+        content_type = mimetypes.guess_type(filename)[0] or "image/jpeg"
+        try:
+            image = application.id_back_image.open("rb")
+        except FileNotFoundError as exc:
+            raise Http404("The uploaded back ID image file is missing.") from exc
+
+        return FileResponse(image, content_type=content_type, as_attachment=False, filename=filename)
+
+
+class LoanApplicationImageMergedView(APIView):
+    def get(self, request, pk):
+        application = get_object_or_404(LoanApplication, pk=pk)
+        if not application.id_merged_image:
+            raise Http404("No merged ID image is attached to this application.")
+
+        filename = Path(application.id_merged_image.name).name
+        content_type = mimetypes.guess_type(filename)[0] or "image/jpeg"
+        try:
+            image = application.id_merged_image.open("rb")
+        except FileNotFoundError as exc:
+            raise Http404("The uploaded merged ID image file is missing.") from exc
+
+        return FileResponse(image, content_type=content_type, as_attachment=False, filename=filename)
 
 
 class DashboardMetricsView(APIView):

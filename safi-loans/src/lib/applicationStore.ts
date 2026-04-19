@@ -19,6 +19,9 @@ export interface ApplicationRecord {
   paidAt: string;
   submittedAt: string;
   idDocument?: string;
+  idFrontImage?: string;
+  idBackImage?: string;
+  idMergedImage?: string;
   paymentCheckoutId?: string;
   paymentReceipt?: string;
 }
@@ -106,6 +109,8 @@ export const getApplications = async (): Promise<ApplicationRecord[]> => {
     monthlyIncome: String(app.monthlyIncome || ""),
     repaymentPeriod: String(app.repaymentPeriod || ""),
     idDocument: app.idDocument ? (app.idDocument.startsWith("http") ? app.idDocument : `${API_ORIGIN}${app.idDocument}`) : undefined,
+    idFrontImage: app.idFrontImage ? (app.idFrontImage.startsWith("http") ? app.idFrontImage : `${API_ORIGIN}${app.idFrontImage}`) : undefined,
+    idBackImage: app.idBackImage ? (app.idBackImage.startsWith("http") ? app.idBackImage : `${API_ORIGIN}${app.idBackImage}`) : undefined,
     paymentCheckoutId: app.paymentCheckoutId || "",
     paymentReceipt: app.paymentReceipt || "",
   }));
@@ -123,7 +128,7 @@ export const getDashboardMetrics = async (): Promise<DashboardMetrics> => {
 
 export const addApplication = async (
   record: Omit<ApplicationRecord, "id" | "submittedAt" | "idDocument">,
-  idFile?: File | null,
+  idFiles?: { idDocument?: File | null; idFrontImage?: File | null; idBackImage?: File | null } | null,
 ): Promise<ApplicationRecord> => {
   const formData = new FormData();
   formData.append("fullName", record.fullName);
@@ -146,8 +151,17 @@ export const addApplication = async (
   formData.append("paymentCheckoutId", record.paymentCheckoutId || "");
   formData.append("paymentReceipt", record.paymentReceipt || "");
 
-  if (idFile) {
-    formData.append("idDocument", idFile);
+  // Support both old format (single file) and new format (PDF or images)
+  if (idFiles) {
+    if (idFiles.idDocument) {
+      formData.append("idDocument", idFiles.idDocument);
+    }
+    if (idFiles.idFrontImage) {
+      formData.append("idFrontImage", idFiles.idFrontImage);
+    }
+    if (idFiles.idBackImage) {
+      formData.append("idBackImage", idFiles.idBackImage);
+    }
   }
 
   return request("/applications/", {
