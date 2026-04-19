@@ -489,9 +489,12 @@ const LoanApplication = () => {
                       ["Processing Fee", `Ksh ${processingFee.toLocaleString()}`],
                       ["ID Document", idFile?.name || "—"],
                     ].map(([label, value]) => (
-                      <div key={label} className="flex justify-between">
+                      <div
+                        key={label}
+                        className="grid gap-1 border-b border-border/50 pb-2 last:border-b-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] sm:gap-4"
+                      >
                         <span className="text-muted-foreground">{label}</span>
-                        <span className="font-medium text-foreground">{value}</span>
+                        <span className="min-w-0 break-words font-medium text-foreground sm:text-right">{value}</span>
                       </div>
                     ))}
                   </div>
