@@ -15,6 +15,8 @@ import { addApplication } from "@/lib/applicationStore";
 const steps = ["Personal Info", "Employment", "Loan Details & ID Upload", "Payment & Submit"];
 const MPESA_TILL_NUMBER = "5378522";
 const PAYMENT_METHOD_LABEL = `Till ${MPESA_TILL_NUMBER}`;
+const PROCESSING_FEE_RATE = 0.05;
+const PROCESSING_FEE_PERCENT_LABEL = "5%";
 
 const normalizeTransactionCode = (value: string) => value.trim().replace(/\s+/g, "").toUpperCase();
 
@@ -74,7 +76,7 @@ const LoanApplication = () => {
 
   const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
 
-  const processingFee = form.loanAmount ? Math.ceil(Number(form.loanAmount) * 0.06) : 0;
+  const processingFee = form.loanAmount ? Math.ceil(Number(form.loanAmount) * PROCESSING_FEE_RATE) : 0;
   const applicantAge = calculateAge(form.dateOfBirth);
   const isApplicantAdult = applicantAge !== null && applicantAge >= 18;
   const hasInvalidDateOfBirth = Boolean(form.dateOfBirth) && applicantAge === null;
@@ -405,7 +407,7 @@ const LoanApplication = () => {
                   {form.loanAmount && (
                     <div className="rounded-lg bg-muted p-4 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Processing Fee (6% of loan)</span>
+                        <span className="text-muted-foreground">Processing Fee ({PROCESSING_FEE_PERCENT_LABEL} of loan)</span>
                         <span className="font-bold text-primary">Ksh {processingFee.toLocaleString()}</span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">You will pay this fee via M-Pesa in the next step before submitting.</p>
@@ -516,7 +518,7 @@ const LoanApplication = () => {
                           <div className="rounded-lg bg-muted p-4 text-center">
                             <p className="text-sm text-muted-foreground">Processing Fee</p>
                             <p className="text-3xl font-heading font-bold text-primary">Ksh {processingFee.toLocaleString()}</p>
-                            <p className="text-xs text-muted-foreground mt-1">6% of Ksh {Number(form.loanAmount).toLocaleString()} loan amount</p>
+                            <p className="text-xs text-muted-foreground mt-1">{PROCESSING_FEE_PERCENT_LABEL} of Ksh {Number(form.loanAmount).toLocaleString()} loan amount</p>
                           </div>
 
                           <div className="rounded-xl border bg-background p-4 space-y-3">
