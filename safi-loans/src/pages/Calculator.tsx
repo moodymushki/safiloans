@@ -28,7 +28,6 @@ const Calculator = () => {
         title="Loan Calculator"
         subtitle="Estimate your repayments before you apply. Adjust the amount and period below."
         imageUrl="https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1600&q=80"
-        imageAlt="Calculator on financial documents"
         caption="Plan before you apply"
         imagePosition="center"
       />

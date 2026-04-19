@@ -56,7 +56,6 @@ const Services = () => (
       title="Our Loan Products"
       subtitle="Flexible loan options designed to match your financial needs. Transparent rates, clear terms."
       imageUrl="https://images.unsplash.com/photo-1553729459-efe14ef6055d?auto=format&fit=crop&w=1600&q=80"
-      imageAlt="Financial documents and Kenyan business planning tools"
       caption="Choose the right loan tier"
       imagePosition="center"
     />

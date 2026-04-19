@@ -49,7 +49,6 @@ const Contact = () => {
         title="Contact Us"
         subtitle="Have questions? We're here to help. Reach out and we'll respond promptly."
         imageUrl="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1600&q=80"
-        imageAlt="Customer support workspace with a laptop"
         caption="Support when you need it"
         imagePosition="center"
       />

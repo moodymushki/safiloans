@@ -26,7 +26,6 @@ const About = () => (
       title="About Safi Loans"
       subtitle="Building financial bridges for Africans since 2018."
       imageUrl="https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1600&q=80"
-      imageAlt="Professional team discussing financial support"
       caption="Built around trust"
       imagePosition="center"
     />
