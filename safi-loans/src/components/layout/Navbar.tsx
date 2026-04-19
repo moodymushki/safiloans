@@ -22,7 +22,8 @@ const Navbar = () => {
           <img
             src="/safi-loans-logo.png"
             alt="Safi Loans"
-            className="h-8 w-auto max-w-[132px] object-contain md:h-9 md:max-w-[160px]"
+            className="h-8 w-auto max-w-[140px] object-contain bg-transparent md:h-9 md:max-w-[160px]"
+            style={{ mixBlendMode: "multiply" }}
           />
         </Link>
 
@@ -32,7 +33,7 @@ const Navbar = () => {
             <Link
               key={link.to}
               to={link.to}
-              className={`rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors lg:px-3 ${
+              className={`flex h-9 min-w-[88px] items-center justify-center rounded-md px-3 text-[13px] font-medium transition-colors lg:px-4 ${
                 location.pathname === link.to
                   ? "text-primary bg-primary/10"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"

@@ -34,11 +34,11 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="space-y-4">
-            <Link to="/" className="inline-flex rounded-md bg-white px-2 py-1 shadow-sm">
+            <Link to="/" className="inline-flex rounded-md bg-transparent px-2 py-1">
               <img
                 src="/safi-loans-logo.png"
                 alt="Safi Loans"
-                className="h-11 w-auto max-w-[190px] object-contain"
+                className="h-14 w-auto max-w-[220px] object-contain"
               />
             </Link>
             <p className="text-sm opacity-70 leading-relaxed">

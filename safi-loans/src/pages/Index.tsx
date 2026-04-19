@@ -27,7 +27,7 @@ const loanTiers = [
 const testimonials = [
   { name: "Mary Wanjiku", quote: "Safi Loans processed my application in just 24 hours. The interest rate is very fair and the team is professional.", rating: 5 },
   { name: "James Odhiambo", quote: "I was able to expand my business thanks to a quick loan from Safi. Highly recommended for any Kenyan entrepreneur.", rating: 5 },
-  { name: "Grace Muthoni", quote: "Transparent process, no hidden fees. I've used Safi Loans three times now and will continue to trust them.", rating: 4 },
+  { name: "Grace obukana", quote: "Transparent process, no hidden fees. I've used Safi Loans three times now and will continue to trust them.", rating: 4 },
 ];
 
 const heroImageUrl = "https://images.pexels.com/photos/17272256/pexels-photo-17272256.jpeg?cs=srgb&dl=pexels-antonio-ribeiro-2267606-17272256.jpg&fm=jpg";
