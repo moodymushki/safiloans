@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Wallet, Briefcase, Banknote, ChevronRight, CheckCircle } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import PageHero from "@/components/layout/PageHero";
 
 const Section = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
   const { ref, isVisible } = useScrollAnimation();
@@ -51,12 +52,14 @@ const tiers = [
 const Services = () => (
   <Layout>
     {/* Header */}
-    <section className="bg-gradient-to-br from-primary to-safi-blue-dark text-primary-foreground py-20">
-      <div className="container text-center animate-fade-in">
-        <h1 className="text-4xl md:text-5xl font-heading font-extrabold mb-4">Our Loan Products</h1>
-        <p className="opacity-80 max-w-lg mx-auto">Flexible loan options designed to match your financial needs. Transparent rates, clear terms.</p>
-      </div>
-    </section>
+    <PageHero
+      title="Our Loan Products"
+      subtitle="Flexible loan options designed to match your financial needs. Transparent rates, clear terms."
+      imageUrl="https://images.unsplash.com/photo-1553729459-efe14ef6055d?auto=format&fit=crop&w=1600&q=80"
+      imageAlt="Financial documents and Kenyan business planning tools"
+      caption="Choose the right loan tier"
+      imagePosition="center"
+    />
 
     {/* Loan Tier Details */}
     <Section>

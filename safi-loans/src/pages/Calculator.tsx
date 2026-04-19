@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import PageHero from "@/components/layout/PageHero";
 
 const Calculator = () => {
   const [amount, setAmount] = useState(25000);
@@ -23,12 +24,14 @@ const Calculator = () => {
 
   return (
     <Layout>
-      <section className="bg-gradient-to-br from-primary to-safi-blue-dark text-primary-foreground py-20">
-        <div className="container text-center animate-fade-in">
-          <h1 className="text-4xl md:text-5xl font-heading font-extrabold mb-4">Loan Calculator</h1>
-          <p className="opacity-80 max-w-lg mx-auto">Estimate your repayments before you apply. Adjust the amount and period below.</p>
-        </div>
-      </section>
+      <PageHero
+        title="Loan Calculator"
+        subtitle="Estimate your repayments before you apply. Adjust the amount and period below."
+        imageUrl="https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1600&q=80"
+        imageAlt="Calculator on financial documents"
+        caption="Plan before you apply"
+        imagePosition="center"
+      />
 
       <section className="py-20">
         <div className="container max-w-4xl">

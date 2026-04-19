@@ -2,6 +2,7 @@ import Layout from "@/components/layout/Layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Target, Eye, Heart, Users, Award } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import PageHero from "@/components/layout/PageHero";
 
 const Section = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
   const { ref, isVisible } = useScrollAnimation();
@@ -21,12 +22,14 @@ const team = [
 
 const About = () => (
   <Layout>
-    <section className="bg-gradient-to-br from-primary to-safi-blue-dark text-primary-foreground py-20">
-      <div className="container text-center animate-fade-in">
-        <h1 className="text-4xl md:text-5xl font-heading font-extrabold mb-4">About Safi Loans</h1>
-        <p className="opacity-80 max-w-lg mx-auto">Building financial bridges for Africans since 2018.</p>
-      </div>
-    </section>
+    <PageHero
+      title="About Safi Loans"
+      subtitle="Building financial bridges for Africans since 2018."
+      imageUrl="https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1600&q=80"
+      imageAlt="Professional team discussing financial support"
+      caption="Built around trust"
+      imagePosition="center"
+    />
 
     {/* Mission & Vision */}
     <Section>

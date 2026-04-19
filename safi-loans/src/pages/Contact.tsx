@@ -9,6 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Phone, Mail, MapPin, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import PageHero from "@/components/layout/PageHero";
 
 const Section = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
   const { ref, isVisible } = useScrollAnimation();
@@ -44,12 +45,14 @@ const Contact = () => {
 
   return (
     <Layout>
-      <section className="bg-gradient-to-br from-primary to-safi-blue-dark text-primary-foreground py-20">
-        <div className="container text-center animate-fade-in">
-          <h1 className="text-4xl md:text-5xl font-heading font-extrabold mb-4">Contact Us</h1>
-          <p className="opacity-80 max-w-lg mx-auto">Have questions? We're here to help. Reach out and we'll respond promptly.</p>
-        </div>
-      </section>
+      <PageHero
+        title="Contact Us"
+        subtitle="Have questions? We're here to help. Reach out and we'll respond promptly."
+        imageUrl="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1600&q=80"
+        imageAlt="Customer support workspace with a laptop"
+        caption="Support when you need it"
+        imagePosition="center"
+      />
 
       <Section>
         <div className="container max-w-5xl">
