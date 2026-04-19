@@ -544,7 +544,7 @@ const LoanApplication = () => {
                               setConfirmingTransactionCode(false);
                               setPaymentDialogOpen(true);
                             }}
-                            className="w-full"
+                            className="w-full whitespace-normal text-sm leading-tight sm:text-base"
                             size="lg"
                           >
                             Proceed to Enter Transaction Code
