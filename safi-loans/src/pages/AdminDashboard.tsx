@@ -257,47 +257,49 @@ const AdminDashboard = () => {
 
       <main className="container py-8 space-y-8">
         {/* Metric cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
           <Card className="border-l-4 border-l-primary">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Users className="h-4 w-4" /> Total Applicants
+            <CardHeader className="space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
+              <CardTitle className="flex items-center gap-1.5 text-[11px] font-medium leading-tight text-muted-foreground sm:text-sm">
+                <Users className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" /> Total Applications
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-heading font-bold">{metrics.totalApplicants}</p>
+            <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+              <p className="font-heading text-2xl font-bold leading-tight sm:text-3xl">{metrics.totalApplicants}</p>
             </CardContent>
           </Card>
           <Card className="border-l-4 border-l-secondary">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <DollarSign className="h-4 w-4" /> Total Revenue
+            <CardHeader className="space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
+              <CardTitle className="flex items-center gap-1.5 text-[11px] font-medium leading-tight text-muted-foreground sm:text-sm">
+                <DollarSign className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" /> Total Revenue
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-heading font-bold text-secondary">Ksh {metrics.totalRevenue.toLocaleString()}</p>
+            <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+              <p className="font-heading text-lg font-bold leading-tight text-secondary [overflow-wrap:anywhere] sm:text-2xl lg:text-3xl">
+                Ksh {metrics.totalRevenue.toLocaleString()}
+              </p>
             </CardContent>
           </Card>
           <Card className="border-l-4 border-l-accent">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <DollarSign className="h-4 w-4" /> Avg Fee / Applicant
+            <CardHeader className="space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
+              <CardTitle className="flex items-center gap-1.5 text-[11px] font-medium leading-tight text-muted-foreground sm:text-sm">
+                <DollarSign className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" /> Avg Fee
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-heading font-bold text-primary">
+            <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+              <p className="font-heading text-lg font-bold leading-tight text-primary [overflow-wrap:anywhere] sm:text-2xl lg:text-3xl">
                 Ksh {Math.round(metrics.averageFeePerApplicant).toLocaleString()}
               </p>
             </CardContent>
           </Card>
           <Card className="border-l-4 border-l-destructive">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <DollarSign className="h-4 w-4" /> Total Loans Requested
+            <CardHeader className="space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
+              <CardTitle className="flex items-center gap-1.5 text-[11px] font-medium leading-tight text-muted-foreground sm:text-sm">
+                <DollarSign className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" /> Total Loans Requested
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-heading font-bold">
+            <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+              <p className="font-heading text-lg font-bold leading-tight [overflow-wrap:anywhere] sm:text-2xl lg:text-3xl">
                 Ksh {metrics.totalLoansRequested.toLocaleString()}
               </p>
             </CardContent>

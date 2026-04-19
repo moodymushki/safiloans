@@ -1,6 +1,10 @@
+import mimetypes
+from pathlib import Path
 from decimal import Decimal
 
 from django.db.models import Sum
+from django.http import FileResponse, Http404
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
@@ -66,6 +70,22 @@ class LoanApplicationListCreateView(APIView):
             send_application_received_email(application)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LoanApplicationDocumentView(APIView):
+    def get(self, request, pk):
+        application = get_object_or_404(LoanApplication, pk=pk)
+        if not application.id_document:
+            raise Http404("No ID document is attached to this application.")
+
+        filename = Path(application.id_document.name).name
+        content_type = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+        try:
+            document = application.id_document.open("rb")
+        except FileNotFoundError as exc:
+            raise Http404("The uploaded ID document file is missing.") from exc
+
+        return FileResponse(document, content_type=content_type, as_attachment=False, filename=filename)
 
 
 class DashboardMetricsView(APIView):

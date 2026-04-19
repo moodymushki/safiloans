@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Shield, Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 const Footer = () => {
@@ -34,13 +34,12 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="space-y-4">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-                <Shield className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-heading font-bold">
-                Safi <span className="text-primary">Loans</span>
-              </span>
+            <Link to="/" className="inline-flex rounded-md bg-white px-2 py-1 shadow-sm">
+              <img
+                src="/safi-loans-logo.png"
+                alt="Safi Loans"
+                className="h-11 w-auto max-w-[190px] object-contain"
+              />
             </Link>
             <p className="text-sm opacity-70 leading-relaxed">
               Empowering Africans with fast, affordable loans. Trusted by thousands for transparent lending.

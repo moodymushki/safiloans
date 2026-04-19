@@ -49,3 +49,8 @@ class LoanApplicationSerializer(serializers.ModelSerializer):
             "paymentCheckoutId",
             "paymentReceipt",
         ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["idDocument"] = f"/api/applications/{instance.pk}/document/" if instance.id_document else None
+        return data
