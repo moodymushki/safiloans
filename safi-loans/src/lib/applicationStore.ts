@@ -101,19 +101,37 @@ export const updateAdminCreds = async (creds: AdminCreds): Promise<void> => {
 };
 
 export const getApplications = async (page: number = 1, pageSize: number = 50): Promise<ApplicationRecord[]> => {
-  const data = await request<{ count: number; total_pages: number; current_page: number; page_size: number; results: ApplicationRecord[] }>(`/applications/?page=${page}&page_size=${pageSize}`);
-  return data.results.map((app) => ({
-    ...app,
-    loanAmount: parseNumber(app.loanAmount),
-    processingFee: parseNumber(app.processingFee),
-    monthlyIncome: String(app.monthlyIncome || ""),
-    repaymentPeriod: String(app.repaymentPeriod || ""),
-    idDocument: app.idDocument ? (app.idDocument.startsWith("http") ? app.idDocument : `${API_ORIGIN}${app.idDocument}`) : undefined,
-    idFrontImage: app.idFrontImage ? (app.idFrontImage.startsWith("http") ? app.idFrontImage : `${API_ORIGIN}${app.idFrontImage}`) : undefined,
-    idBackImage: app.idBackImage ? (app.idBackImage.startsWith("http") ? app.idBackImage : `${API_ORIGIN}${app.idBackImage}`) : undefined,
-    paymentCheckoutId: app.paymentCheckoutId || "",
-    paymentReceipt: app.paymentReceipt || "",
-  }));
+  try {
+    // Try new paginated format first
+    const data = await request<{ count: number; total_pages: number; current_page: number; page_size: number; results: ApplicationRecord[] }>(`/applications/?page=${page}&page_size=${pageSize}`);
+    return data.results.map((app) => ({
+      ...app,
+      loanAmount: parseNumber(app.loanAmount),
+      processingFee: parseNumber(app.processingFee),
+      monthlyIncome: String(app.monthlyIncome || ""),
+      repaymentPeriod: String(app.repaymentPeriod || ""),
+      idDocument: app.idDocument ? (app.idDocument.startsWith("http") ? app.idDocument : `${API_ORIGIN}${app.idDocument}`) : undefined,
+      idFrontImage: app.idFrontImage ? (app.idFrontImage.startsWith("http") ? app.idFrontImage : `${API_ORIGIN}${app.idFrontImage}`) : undefined,
+      idBackImage: app.idBackImage ? (app.idBackImage.startsWith("http") ? app.idBackImage : `${API_ORIGIN}${app.idBackImage}`) : undefined,
+      paymentCheckoutId: app.paymentCheckoutId || "",
+      paymentReceipt: app.paymentReceipt || "",
+    }));
+  } catch {
+    // Fallback: Try old format (array) for backward compatibility
+    const data = await request<ApplicationRecord[]>("/applications/");
+    return data.map((app) => ({
+      ...app,
+      loanAmount: parseNumber(app.loanAmount),
+      processingFee: parseNumber(app.processingFee),
+      monthlyIncome: String(app.monthlyIncome || ""),
+      repaymentPeriod: String(app.repaymentPeriod || ""),
+      idDocument: app.idDocument ? (app.idDocument.startsWith("http") ? app.idDocument : `${API_ORIGIN}${app.idDocument}`) : undefined,
+      idFrontImage: app.idFrontImage ? (app.idFrontImage.startsWith("http") ? app.idFrontImage : `${API_ORIGIN}${app.idFrontImage}`) : undefined,
+      idBackImage: app.idBackImage ? (app.idBackImage.startsWith("http") ? app.idBackImage : `${API_ORIGIN}${app.idBackImage}`) : undefined,
+      paymentCheckoutId: app.paymentCheckoutId || "",
+      paymentReceipt: app.paymentReceipt || "",
+    }));
+  }
 };
 
 export const getDashboardMetrics = async (): Promise<DashboardMetrics> => {

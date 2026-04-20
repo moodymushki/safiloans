@@ -62,10 +62,12 @@ const AdminDashboard = () => {
       setMetrics(metricData);
       setDisplayUsername(profile.username);
       setNewUsername(profile.username);
-    } catch {
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Connection error";
+      console.error("Dashboard load error:", errorMsg);
       toast({
         title: "Load failed",
-        description: "Could not load dashboard data from backend.",
+        description: errorMsg || "Could not load dashboard data from backend.",
         variant: "destructive",
       });
     } finally {

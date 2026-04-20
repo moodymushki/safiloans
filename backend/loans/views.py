@@ -83,7 +83,7 @@ class LoanApplicationListCreateView(APIView):
             "current_page": page_obj.number,
             "page_size": page_size,
             "results": serializer.data
-        })
+        }, status=status.HTTP_200_OK)
 
     def post(self, request):
         checkout_id = str(request.data.get("paymentCheckoutId", "")).strip()
