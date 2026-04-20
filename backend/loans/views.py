@@ -1,8 +1,9 @@
 import mimetypes
 from pathlib import Path
 from decimal import Decimal
-from PIL import Image
+from functools import lru_cache
 
+from django.core.cache import cache
 from django.db.models import Sum
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
@@ -11,21 +12,32 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .emails import send_application_received_email
 from .models import AdminCredential, LoanApplication
 from .serializers import LoanApplicationSerializer
+from .tasks import process_image_merge_async, send_email_async
 
 
 def _normalize_username(username: str) -> str:
     return "".join(username.split()).lower()
 
 
-def _get_default_admin() -> AdminCredential:
+@lru_cache(maxsize=1)
+def _get_default_admin_cached() -> AdminCredential:
+    """Get admin credentials with caching to avoid repeated database lookups."""
     admin, _created = AdminCredential.objects.get_or_create(
         username="koechkipsang36@gmail.com",
         defaults={"password": "Ombogo1234."},
     )
     return admin
+
+
+def _get_default_admin() -> AdminCredential:
+    """Get default admin, refreshing cache when credentials are updated."""
+    try:
+        return _get_default_admin_cached()
+    except:
+        _get_default_admin_cached.cache_clear()
+        return _get_default_admin_cached()
 
 
 class HealthView(APIView):
@@ -69,48 +81,13 @@ class LoanApplicationListCreateView(APIView):
         if serializer.is_valid():
             application = serializer.save()
             
-            # Merge front and back ID images if both are provided
+            # Process image merging in background (non-blocking)
             if application.id_front_image and application.id_back_image:
-                try:
-                    front_img = Image.open(application.id_front_image.path)
-                    back_img = Image.open(application.id_back_image.path)
-                    
-                    # Resize images to same height for side-by-side merging
-                    front_height = front_img.height
-                    back_height = back_img.height
-                    max_height = max(front_height, back_height)
-                    
-                    # Resize both to max height, maintaining aspect ratio
-                    front_img = front_img.resize((int(front_img.width * max_height / front_img.height), max_height), Image.Resampling.LANCZOS)
-                    back_img = back_img.resize((int(back_img.width * max_height / back_img.height), max_height), Image.Resampling.LANCZOS)
-                    
-                    # Create new image with combined width
-                    merged_width = front_img.width + back_img.width
-                    merged_img = Image.new('RGB', (merged_width, max_height), (255, 255, 255))
-                    
-                    # Paste images side by side
-                    merged_img.paste(front_img, (0, 0))
-                    merged_img.paste(back_img, (front_img.width, 0))
-                    
-                    # Save merged image
-                    from django.core.files.base import ContentFile
-                    from io import BytesIO
-                    buffer = BytesIO()
-                    merged_img.save(buffer, format='JPEG', quality=85)
-                    buffer.seek(0)
-                    
-                    # Generate filename for merged image
-                    import os
-                    base_name = os.path.splitext(os.path.basename(application.id_front_image.name))[0]
-                    merged_filename = f"{base_name}_merged.jpg"
-                    
-                    application.id_merged_image.save(merged_filename, ContentFile(buffer.getvalue()), save=True)
-                    
-                except Exception as e:
-                    # Log error but don't fail the application submission
-                    print(f"Error merging ID images: {e}")
+                process_image_merge_async(application.id)
             
-            send_application_received_email(application)
+            # Send confirmation email in background (non-blocking)
+            send_email_async(application.id)
+            
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -181,19 +158,26 @@ class LoanApplicationImageMergedView(APIView):
 
 class DashboardMetricsView(APIView):
     def get(self, request):
-        count = LoanApplication.objects.count()
-        total_revenue = LoanApplication.objects.aggregate(total=Sum("processing_fee")).get("total") or Decimal("0")
-        total_loan_amount = LoanApplication.objects.aggregate(total=Sum("loan_amount")).get("total") or Decimal("0")
-        average_fee = (total_revenue / count) if count else Decimal("0")
+        # Try to get cached metrics (cache for 5 minutes)
+        cache_key = "dashboard_metrics"
+        metrics = cache.get(cache_key)
+        
+        if metrics is None:
+            count = LoanApplication.objects.count()
+            total_revenue = LoanApplication.objects.aggregate(total=Sum("processing_fee")).get("total") or Decimal("0")
+            total_loan_amount = LoanApplication.objects.aggregate(total=Sum("loan_amount")).get("total") or Decimal("0")
+            average_fee = (total_revenue / count) if count else Decimal("0")
 
-        return Response(
-            {
+            metrics = {
                 "totalApplicants": count,
                 "totalRevenue": total_revenue,
                 "totalLoansRequested": total_loan_amount,
                 "averageFeePerApplicant": average_fee,
             }
-        )
+            # Cache for 5 minutes (300 seconds)
+            cache.set(cache_key, metrics, 300)
+
+        return Response(metrics)
 
 
 class AdminLoginView(APIView):
@@ -226,4 +210,8 @@ class AdminProfileView(APIView):
         admin.username = username
         admin.password = password
         admin.save(update_fields=["username", "password", "updated_at"])
+        
+        # Clear cache after updating admin credentials
+        _get_default_admin_cached.cache_clear()
+        
         return Response({"message": "Profile updated.", "username": admin.username})

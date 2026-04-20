@@ -3,7 +3,7 @@ from django.db import models
 
 class LoanApplication(models.Model):
     full_name = models.CharField(max_length=100)
-    email = models.EmailField(max_length=255)
+    email = models.EmailField(max_length=255, db_index=True)
     phone = models.CharField(max_length=20)
     id_number = models.CharField(max_length=20)
     date_of_birth = models.DateField()
@@ -19,24 +19,29 @@ class LoanApplication(models.Model):
     mpesa_number = models.CharField(max_length=20)
     additional_info = models.TextField(blank=True)
     paid_at = models.DateTimeField()
-    submitted_at = models.DateTimeField(auto_now_add=True)
+    submitted_at = models.DateTimeField(auto_now_add=True, db_index=True)
     # Support both single PDF and individual image uploads (front/back)
     id_document = models.FileField(upload_to="id_documents/", blank=True, null=True)
     id_front_image = models.ImageField(upload_to="id_documents/", blank=True, null=True)
     id_back_image = models.ImageField(upload_to="id_documents/", blank=True, null=True)
     id_merged_image = models.ImageField(upload_to="id_documents/", blank=True, null=True)
-    payment_checkout_id = models.CharField(max_length=100, unique=True, blank=True, null=True)
-    payment_receipt = models.CharField(max_length=100, blank=True)
+    payment_checkout_id = models.CharField(max_length=100, unique=True, blank=True, null=True, db_index=True)
+    payment_receipt = models.CharField(max_length=100, blank=True, db_index=True)
 
     class Meta:
         ordering = ["-submitted_at"]
+        indexes = [
+            models.Index(fields=["email", "submitted_at"]),
+            models.Index(fields=["payment_receipt"]),
+            models.Index(fields=["payment_checkout_id"]),
+        ]
 
     def __str__(self) -> str:
         return f"{self.full_name} - Ksh {self.loan_amount}"
 
 
 class AdminCredential(models.Model):
-    username = models.CharField(max_length=100, unique=True)
+    username = models.CharField(max_length=100, unique=True, db_index=True)
     password = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
