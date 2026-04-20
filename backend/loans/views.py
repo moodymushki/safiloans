@@ -1,10 +1,10 @@
 import mimetypes
 from pathlib import Path
 from decimal import Decimal
-from functools import lru_cache
 
+from django.core.paginator import Paginator
 from django.core.cache import cache
-from django.db.models import Sum
+from django.db.models import Sum, Prefetch
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -21,23 +21,31 @@ def _normalize_username(username: str) -> str:
     return "".join(username.split()).lower()
 
 
-@lru_cache(maxsize=1)
-def _get_default_admin_cached() -> AdminCredential:
-    """Get admin credentials with caching to avoid repeated database lookups."""
-    admin, _created = AdminCredential.objects.get_or_create(
-        username="koechkipsang36@gmail.com",
-        defaults={"password": "Ombogo1234."},
-    )
-    return admin
-
-
 def _get_default_admin() -> AdminCredential:
-    """Get default admin, refreshing cache when credentials are updated."""
+    """Get admin credentials with fast lookup (uses database indexes)."""
+    # Try to get from cache first (30 minute cache)
+    cache_key = "default_admin_id"
+    admin_id = cache.get(cache_key)
+    
+    if admin_id:
+        try:
+            return AdminCredential.objects.get(id=admin_id)
+        except AdminCredential.DoesNotExist:
+            cache.delete(cache_key)
+    
+    # Fallback: Try to get by username using indexed field
     try:
-        return _get_default_admin_cached()
-    except:
-        _get_default_admin_cached.cache_clear()
-        return _get_default_admin_cached()
+        admin = AdminCredential.objects.get(username="koechkipsang36@gmail.com")
+        cache.set(cache_key, admin.id, 1800)  # Cache for 30 minutes
+        return admin
+    except AdminCredential.DoesNotExist:
+        # Create if doesn't exist
+        admin, _created = AdminCredential.objects.get_or_create(
+            username="koechkipsang36@gmail.com",
+            defaults={"password": "Ombogo1234."},
+        )
+        cache.set(cache_key, admin.id, 1800)  # Cache for 30 minutes
+        return admin
 
 
 class HealthView(APIView):
@@ -47,9 +55,35 @@ class HealthView(APIView):
 
 class LoanApplicationListCreateView(APIView):
     def get(self, request):
-        queryset = LoanApplication.objects.all()
-        serializer = LoanApplicationSerializer(queryset, many=True)
-        return Response(serializer.data)
+        # Add pagination - load 50 items per page by default
+        page = request.query_params.get('page', 1)
+        page_size = request.query_params.get('page_size', 50)
+        
+        try:
+            page = int(page)
+            page_size = min(int(page_size), 100)  # Cap at 100 to prevent abuse
+        except (ValueError, TypeError):
+            page = 1
+            page_size = 50
+        
+        # Use database index for ordering - most recent first
+        queryset = LoanApplication.objects.all().order_by('-submitted_at')
+        paginator = Paginator(queryset, page_size)
+        
+        try:
+            page_obj = paginator.page(page)
+        except Exception:
+            page_obj = paginator.page(1)
+        
+        serializer = LoanApplicationSerializer(page_obj.object_list, many=True)
+        
+        return Response({
+            "count": paginator.count,
+            "total_pages": paginator.num_pages,
+            "current_page": page_obj.number,
+            "page_size": page_size,
+            "results": serializer.data
+        })
 
     def post(self, request):
         checkout_id = str(request.data.get("paymentCheckoutId", "")).strip()
@@ -212,6 +246,6 @@ class AdminProfileView(APIView):
         admin.save(update_fields=["username", "password", "updated_at"])
         
         # Clear cache after updating admin credentials
-        _get_default_admin_cached.cache_clear()
+        cache.delete("default_admin_id")
         
         return Response({"message": "Profile updated.", "username": admin.username})

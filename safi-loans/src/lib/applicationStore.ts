@@ -100,9 +100,9 @@ export const updateAdminCreds = async (creds: AdminCreds): Promise<void> => {
   });
 };
 
-export const getApplications = async (): Promise<ApplicationRecord[]> => {
-  const data = await request<ApplicationRecord[]>("/applications/");
-  return data.map((app) => ({
+export const getApplications = async (page: number = 1, pageSize: number = 50): Promise<ApplicationRecord[]> => {
+  const data = await request<{ count: number; total_pages: number; current_page: number; page_size: number; results: ApplicationRecord[] }>(`/applications/?page=${page}&page_size=${pageSize}`);
+  return data.results.map((app) => ({
     ...app,
     loanAmount: parseNumber(app.loanAmount),
     processingFee: parseNumber(app.processingFee),
